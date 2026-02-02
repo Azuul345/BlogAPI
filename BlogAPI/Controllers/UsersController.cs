@@ -61,5 +61,14 @@ namespace BlogAPI.Controllers
             // Uppgiften: returnera userId som ska användas i andra anrop
             return Ok(new { userId = user.Id, user.UserName });
         }
+
+
+        // GET: api/categories
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        {
+            var users = await _context.Users.ToListAsync();
+            return Ok(users);
+        }
     }
 }

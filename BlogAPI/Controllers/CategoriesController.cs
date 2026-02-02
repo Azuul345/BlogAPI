@@ -1,4 +1,6 @@
-﻿using BlogAPI.Data;
+﻿using Azure.Core;
+using BlogAPI.Data;
+using BlogAPI.Dtos;
 using BlogAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,21 +42,23 @@ namespace BlogAPI.Controllers
 
         // POST: api/categories
         [HttpPost]
-        public async Task<ActionResult<Category>> CreateCategory(Category category)
+        public async Task<ActionResult<Category>> CreateCategory(CreateCategoryRequest request)
         {
-            if (string.IsNullOrWhiteSpace(category.Name))
+            if (string.IsNullOrWhiteSpace(request.Name))
             {
                 return BadRequest("Category name is required.");
             }
 
             // valfritt: kolla om namnet redan finns
             var exists = await _context.Categories
-                .AnyAsync(c => c.Name == category.Name);
+                .AnyAsync(c => c.Name == request.Name);
 
             if (exists)
             {
                 return BadRequest("Category with this name already exists.");
             }
+
+            var category = new Category { Name = request.Name };
 
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();

@@ -11,6 +11,7 @@ namespace BlogAPI.Models
 
         [JsonIgnore]
         public BlogPost Post { get; set; }
+
         public int UserId { get; set; }
 
         [JsonIgnore]

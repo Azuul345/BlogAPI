@@ -1,5 +1,6 @@
-﻿using BlogAPI.Data;
+﻿using AutoMapper;
 using BlogAPI.Dtos;
+using BlogAPI.Data;
 using BlogAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,27 +12,32 @@ namespace BlogAPI.Controllers
     public class PostsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
 
-        public PostsController(AppDbContext context)
+        public PostsController(AppDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
-        // GET: api/posts
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BlogPost>>> GetPosts()
+        public async Task<ActionResult<IEnumerable<PostResponse>>> GetPosts()
         {
             var posts = await _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Category)
                 .ToListAsync();
 
-            return Ok(posts);
+            var response = _mapper.Map<List<PostResponse>>(posts);
+
+            return Ok(response);
         }
+
+
 
         // GET: api/posts/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<BlogPost>> GetPost(int id)
+        public async Task<ActionResult<PostResponse>> GetPost(int id)
         {
             var post = await _context.Posts
                 .Include(p => p.User)
@@ -43,7 +49,9 @@ namespace BlogAPI.Controllers
                 return NotFound();
             }
 
-            return Ok(post);
+            var response = _mapper.Map<PostResponse>(post);
+
+            return Ok(response);
         }
 
         // POST: api/posts
