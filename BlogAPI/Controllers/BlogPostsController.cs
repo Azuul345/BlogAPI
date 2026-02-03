@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
-using BlogAPI.Dtos;
 using BlogAPI.Data;
+using BlogAPI.Dtos;
 using BlogAPI.Models;
+using BlogAPI.Services.Implementations;
+using BlogAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,26 +13,20 @@ namespace BlogAPI.Controllers
     [Route("api/[controller]")]
     public class PostsController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
-
-        public PostsController(AppDbContext context, IMapper mapper)
+        private readonly IPostService _postService;
+        private readonly ICommentService _commentService;
+        public PostsController(IPostService postService, ICommentService commentService)
         {
-            _context = context;
-            _mapper = mapper;
+            _postService = postService;
+            _commentService = commentService;
         }
+
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PostResponse>>> GetPosts()
         {
-            var posts = await _context.Posts
-                .Include(p => p.User)
-                .Include(p => p.Category)
-                .ToListAsync();
-
-            var response = _mapper.Map<List<PostResponse>>(posts);
-
-            return Ok(response);
+            var posts = await _postService.GetAllAsync();
+            return Ok(posts);
         }
 
 
@@ -39,53 +35,26 @@ namespace BlogAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PostResponse>> GetPost(int id)
         {
-            var post = await _context.Posts
-                .Include(p => p.User)
-                .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (post == null)
-            {
-                return NotFound();
-            }
-
-            var response = _mapper.Map<PostResponse>(post);
-
-            return Ok(response);
+            var post = await _postService.GetByIdAsync(id);
+            if (post == null) return NotFound();
+            return Ok(post);
         }
 
         // POST: api/posts
         [HttpPost]
-        public async Task<ActionResult<BlogPost>> CreatePost(CreatePostRequest request)
+        public async Task<ActionResult<PostResponse>> CreatePost(CreatePostRequest request)
         {
-            // 1. Kontrollera att user finns
-            var user = await _context.Users.FindAsync(request.UserId);
-            if (user == null)
+            try
             {
-                return BadRequest("User not found.");
+                var post = await _postService.CreateAsync(request);
+                return CreatedAtAction(nameof(GetPost), new { id = post.Id }, post);
             }
-
-            // 2. Kontrollera att category finns
-            var category = await _context.Categories.FindAsync(request.CategoryId);
-            if (category == null)
+            catch (ArgumentException ex)
             {
-                return BadRequest("Category not found.");
+                return BadRequest(ex.Message);
             }
-
-            // 3. Skapa post
-            var post = new BlogPost
-            {
-                Title = request.Title,
-                Text = request.Text,
-                UserId = request.UserId,
-                CategoryId = request.CategoryId
-            };
-
-            _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPost), new { id = post.Id }, post);
         }
+
 
 
 
@@ -93,136 +62,85 @@ namespace BlogAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePost(int id, UpdatePostRequest request)
         {
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null)
+            try
             {
-                return NotFound();
+                var updated = await _postService.UpdateAsync(id, request);
+                if (!updated) return NotFound();
+                return NoContent();
             }
-
-            // kolla att det är rätt ägare
-            if (post.UserId != request.UserId)
+            catch (UnauthorizedAccessException ex)
             {
-                return Forbid("You are not allowed to edit this post.");
+                return Forbid(ex.Message);
             }
-
-            // kolla att kategori finns
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == request.CategoryId);
-            if (!categoryExists)
+            catch (ArgumentException ex)
             {
-                return BadRequest("Category not found.");
+                return BadRequest(ex.Message);
             }
-
-            post.Title = request.Title;
-            post.Text = request.Text;
-            post.CategoryId = request.CategoryId;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
+
 
         // DELETE: api/posts/1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePost(int id, [FromQuery] int userId)
         {
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null)
+            try
             {
-                return NotFound();
+                var deleted = await _postService.DeleteAsync(id, userId);
+                if (!deleted) return NotFound();
+                return NoContent();
             }
-
-            // bara ägaren får ta bort
-            if (post.UserId != userId)
+            catch (UnauthorizedAccessException ex)
             {
-                return Forbid("You are not allowed to delete this post.");
+                return Forbid(ex.Message);
             }
+        }
 
-            _context.Posts.Remove(post);
-            await _context.SaveChangesAsync();
 
-            return NoContent();
+        // GET: api/posts/search?title=...&categoryId=...
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<PostResponse>>> SearchPosts(
+    [FromQuery] string? title,
+    [FromQuery] int? categoryId)
+        {
+            var posts = await _postService.SearchAsync(title, categoryId);
+            return Ok(posts);
         }
 
         // GET: api/posts/1/comments
         [HttpGet("{postId}/comments")]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetCommentsForPost(int postId)
+        public async Task<ActionResult<IEnumerable<CommentResponse>>> GetCommentsForPost(int postId)
         {
-            var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
-            if (!postExists)
+            var comments = await _commentService.GetForPostAsync(postId);
+            if (comments == null)
             {
                 return NotFound("Post not found.");
             }
-
-            var comments = await _context.Comments
-                .Where(c => c.PostId == postId)
-                .ToListAsync();
 
             return Ok(comments);
         }
 
         // POST: api/posts/1/comments
         [HttpPost("{postId}/comments")]
-        public async Task<ActionResult<Comment>> CreateComment(int postId, CreateCommentRequest request)
+        public async Task<ActionResult<CommentResponse>> CreateComment(int postId, CreateCommentRequest request)
         {
-            // 1. Kolla att post finns
-            var post = await _context.Posts.FindAsync(postId);
-            if (post == null)
+            try
             {
-                return NotFound("Post not found.");
+                var comment = await _commentService.CreateAsync(postId, request);
+                return CreatedAtAction(nameof(GetCommentsForPost),
+                    new { postId = postId }, comment);
             }
-
-            // 2. Kolla att user finns
-            var user = await _context.Users.FindAsync(request.UserId);
-            if (user == null)
+            catch (ArgumentException ex)
             {
-                return BadRequest("User not found.");
+                return BadRequest(ex.Message); // Post/User saknas eller ogiltig text
             }
-
-            // 3. Logik: man får inte kommentera sitt eget inlägg
-            if (post.UserId == request.UserId)
+            catch (UnauthorizedAccessException ex)
             {
-                return Forbid("You cannot comment on your own post.");
+                return Forbid(ex.Message); // försöker kommentera eget inlägg
             }
-
-            // 4. Skapa kommentar
-            var comment = new Comment
-            {
-                Text = request.Text,
-                PostId = postId,
-                UserId = request.UserId
-            };
-
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetCommentsForPost), new { postId = postId }, comment);
         }
 
 
-        // GET: api/posts/search?title=...&categoryId=...
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<BlogPost>>> SearchPosts(
-            [FromQuery] string? title,
-            [FromQuery] int? categoryId)
-        {
-            var query = _context.Posts
-                .Include(p => p.Category)
-                .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(title))
-            {
-                query = query.Where(p => p.Title.Contains(title));
-            }
-
-            if (categoryId.HasValue)
-            {
-                query = query.Where(p => p.CategoryId == categoryId.Value);
-            }
-
-            var result = await query.ToListAsync();
-
-            return Ok(result);
-        }
 
 
     }

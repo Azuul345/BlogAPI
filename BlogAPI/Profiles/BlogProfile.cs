@@ -14,6 +14,10 @@ namespace BlogAPI.Profiles
                     opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.CategoryName,
                     opt => opt.MapFrom(src => src.Category.Name));
+
+            CreateMap<Comment, CommentResponse>()
+            .ForMember(dest => dest.UserName,
+                opt => opt.MapFrom(src => src.User.UserName));
         }
     }
 }

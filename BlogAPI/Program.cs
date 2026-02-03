@@ -1,7 +1,12 @@
-using BlogAPI.Data;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using BlogAPI.Data;
 using BlogAPI.Profiles;
+using BlogAPI.Repositories.Implementations;
+using BlogAPI.Repositories.Interfaces;
+using BlogAPI.Services.Implementations;
+using BlogAPI.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
 
 
 namespace BlogAPI
@@ -17,6 +22,18 @@ namespace BlogAPI
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            builder.Services.AddScoped<IPostRepository, PostRepository>();
+            builder.Services.AddScoped<IPostService, PostService>();
+
+            builder.Services.AddScoped<IPostRepository, PostRepository>();
+            builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+
+            builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<ICommentService, CommentService>();
+
+
+
 
             builder.Services.AddAutoMapper(typeof(Program));
 
