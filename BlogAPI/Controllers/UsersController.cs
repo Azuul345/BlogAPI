@@ -63,12 +63,64 @@ namespace BlogAPI.Controllers
         }
 
 
-        // GET: api/categories
+        // GET: api/users
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             var users = await _context.Users.ToListAsync();
             return Ok(users);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, UpdateUserRequest request)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            //kolla att det är rätt ägare
+            if (user.Id != request.UserId)
+            {
+                return Forbid("You are not allowed to edit this User.");
+            }
+
+            user.UserName = request.UserName;
+            user.Email = request.Email;
+            user.Password = request.Password;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id, [FromQuery] int userId)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // bara ägaren får ta bort
+            if (user.Id != userId)
+            {
+                return Forbid("You are not allowed to delete this user.");
+            }
+
+            // ta bort alla kommentarer skrivna av användaren
+            var userComments = await _context.Comments
+                .Where(c => c.UserId == id)
+                .ToListAsync();
+
+            _context.Comments.RemoveRange(userComments);
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

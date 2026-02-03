@@ -34,7 +34,7 @@ namespace BlogAPI.Data
                 .HasForeignKey(c => c.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // User -> Comments : Restrict i DB (vi hanterar detta i kod)
+            // User -> Comments : cascade i DB (vi hanterar detta i kod)
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.User)
                 .WithMany(u => u.Comments)
