@@ -2,6 +2,8 @@
 
 namespace BlogAPI.Models
 {
+    // Comment is the domain model representing a comment on a blog post.
+    // It links to both a Post and the User who wrote the comment.
     public class Comment
     {
         public int Id { get; set; }
