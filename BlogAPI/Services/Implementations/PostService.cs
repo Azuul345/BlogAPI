@@ -8,12 +8,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogAPI.Services.Implementations
 {
+    // PostService contains the business rules for working with posts
+    // It uses IPostRepository for data access and AutoMapper to return DTOs
     public class PostService : IPostService
     {
         private readonly IPostRepository _postRepository;
-        private readonly AppDbContext _context;   // för user/category checks
+        // AppDbContext is used here for cross-entity checks (user and category existence).
+        private readonly AppDbContext _context;   
         private readonly IMapper _mapper;
 
+        // All dependencies are injected via the constructor (constructor injection).
         public PostService(IPostRepository postRepository, AppDbContext context, IMapper mapper)
         {
             _postRepository = postRepository;
@@ -35,6 +39,7 @@ namespace BlogAPI.Services.Implementations
             return _mapper.Map<PostResponse>(post);
         }
 
+        // Search posts and map the result to PostResponse DTOs.
         public async Task<List<PostResponse>> SearchAsync(string? title, int? categoryId)
         {
             var posts = await _postRepository.SearchAsync(title, categoryId);
@@ -60,9 +65,11 @@ namespace BlogAPI.Services.Implementations
 
             await _postRepository.AddAsync(post);
 
-            // hämta tillbaka med navigation för att kunna mappa till DTO
+            // Reload the post including navigation properties so AutoMapper
+            // can read User.UserName and Category.Name.
             post = await _postRepository.GetByIdAsync(post.Id) ?? post;
 
+            // Map the entity to a PostResponse DTO before returning it to the controller.
             return _mapper.Map<PostResponse>(post);
         }
 

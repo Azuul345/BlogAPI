@@ -5,15 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogAPI.Repositories.Implementations
 {
+    // Concrete implementation of IPostRepository using EF Core and AppDbContext.
     public class PostRepository : IPostRepository
     {
         private readonly AppDbContext _context;
 
+        // AppDbContext is injected via dependency injection.
         public PostRepository(AppDbContext context)
         {
             _context = context;
         }
 
+        // Load all posts including author (User) and Category navigation properties.
         public async Task<List<BlogPost>> GetAllAsync()
         {
             return await _context.Posts
@@ -22,6 +25,7 @@ namespace BlogAPI.Repositories.Implementations
                 .ToListAsync();
         }
 
+        // Load a single post by id including User and Category.
         public async Task<BlogPost?> GetByIdAsync(int id)
         {
             return await _context.Posts
@@ -30,6 +34,9 @@ namespace BlogAPI.Repositories.Implementations
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
+        // Build a query dynamically based on optional search parameters.
+        // If title is provided, filter by Title.Contains(title).
+        // If categoryId is provided, filter by CategoryId.
         public async Task<List<BlogPost>> SearchAsync(string? title, int? categoryId)
         {
             var query = _context.Posts

@@ -110,7 +110,7 @@ namespace BlogAPI.Controllers
         [HttpGet("{postId}/comments")]
         public async Task<ActionResult<IEnumerable<CommentResponse>>> GetCommentsForPost(int postId)
         {
-            var comments = await _commentService.GetForPostAsync(postId);
+            var comments = await _commentService.GetCommentsForPostAsync(postId);
             if (comments == null)
             {
                 return NotFound("Post not found.");

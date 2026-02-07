@@ -2,6 +2,7 @@
 
 namespace BlogAPI.Repositories.Interfaces
 {
+    // Repository interface for accessing Comment data.
     public interface ICommentRepository
     {
         Task<List<Comment>> GetForPostAsync(int postId);

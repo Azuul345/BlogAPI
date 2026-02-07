@@ -2,6 +2,9 @@
 
 namespace BlogAPI.Repositories.Interfaces
 {
+    // Repository interface for accessing BlogPost data.
+    // This hides EF Core from higher layers (services/controllers)
+    // Makes data access easier to test and to change later.
     public interface IPostRepository
     {
         Task<List<BlogPost>> GetAllAsync();

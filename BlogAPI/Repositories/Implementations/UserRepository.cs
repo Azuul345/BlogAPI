@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogAPI.Repositories.Implementations
 {
+    // Concrete implementation of IUserRepository using EF Core and AppDbContext
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
 
+        // AppDbContext is injected via dependency injection
         public UserRepository(AppDbContext context)
         {
             _context = context;

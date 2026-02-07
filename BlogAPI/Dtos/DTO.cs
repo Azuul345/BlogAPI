@@ -4,17 +4,17 @@
     // Don't exposes the User entity directly from the API.
     public class RegisterRequest
     {
-        public string UserName { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }   // simple variant for the assignment
+        public string UserName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;  // simple variant for the assignment
     }
 
     // DTO used as request body when logging in.
     // The API returns the userId if the credentials are correct.
     public class LoginRequest
     {
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 
     // DTO used when updating a user account.
@@ -22,7 +22,7 @@
     public class UpdateUserRequest
     {
         public int UserId { get; set; }
-        public string UserName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty; 
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
 
@@ -33,8 +33,8 @@
     public class CreatePostRequest
     {
         public int UserId { get; set; }      // id of the logged-in user
-        public string Title { get; set; }
-        public string Text { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
         public int CategoryId { get; set; }  // id of an existing Category
     }
 
@@ -44,8 +44,8 @@
     public class UpdatePostRequest
     {
         public int UserId { get; set; }      // id of the user trying to update the post
-        public string Title { get; set; }
-        public string Text { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
         public int CategoryId { get; set; }
     }
 
@@ -55,13 +55,13 @@
     public class CreateCommentRequest
     {
         public int UserId { get; set; }   // id of the logged-in user
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty;
     }
 
     // DTO used as request body when creating a new category.
     public class CreateCategoryRequest
     {
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty; 
     }
 
   

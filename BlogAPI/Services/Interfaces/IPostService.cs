@@ -2,6 +2,8 @@
 
 namespace BlogAPI.Services.Interfaces
 {
+    // Service interface for business logic related to blog posts
+    // Controllers depend on this abstraction instead of talking to repositories directly
     public interface IPostService
     {
         Task<List<PostResponse>> GetAllAsync();

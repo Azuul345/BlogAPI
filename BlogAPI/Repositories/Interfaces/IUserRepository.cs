@@ -2,6 +2,8 @@
 
 namespace BlogAPI.Repositories.Interfaces
 {
+    // Repository interface for accessing User data.
+    // Controllers and services depend on this abstraction instead of EF Core directly
     public interface IUserRepository
     {
         Task<User?> GetByIdAsync(int id);

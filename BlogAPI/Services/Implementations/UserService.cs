@@ -14,6 +14,7 @@ namespace BlogAPI.Services.Implementations
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
+        // All dependencies are injected via the constructor.
         public UserService(
             IUserRepository userRepository,
             AppDbContext context,
@@ -43,7 +44,7 @@ namespace BlogAPI.Services.Implementations
             {
                 UserName = request.UserName,
                 Email = request.Email,
-                Password = request.Password // i riktig app: hash
+                Password = request.Password // save as hash in real application
             };
 
             await _userRepository.AddAsync(user);
@@ -90,7 +91,10 @@ namespace BlogAPI.Services.Implementations
                 throw new UnauthorizedAccessException("You are not allowed to delete this user.");
             }
 
-            // ta bort alla kommentarer skrivna av användaren
+         
+            // Remove all comments written by this user manually before deleting the user.
+            // Using DeleteBehavior.Restrict on User to Comments in AppDbContext to avoid
+            // multiple cascade paths in the database, so this has to be done in code.
             var userComments = await _context.Comments
                 .Where(c => c.UserId == id)
                 .ToListAsync();

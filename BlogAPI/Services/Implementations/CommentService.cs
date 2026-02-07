@@ -8,12 +8,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogAPI.Services.Implementations
 {
+    // CommentService contains the business rules for working with comments.
+    // It uses ICommentRepository for data access and AutoMapper to return DTOs.
     public class CommentService : ICommentService
     {
         private readonly AppDbContext _context;
         private readonly ICommentRepository _commentRepository;
         private readonly IMapper _mapper;
 
+        // Dependencies are injected via the constructor.
         public CommentService(
             AppDbContext context,
             ICommentRepository commentRepository,
@@ -24,7 +27,7 @@ namespace BlogAPI.Services.Implementations
             _mapper = mapper;
         }
 
-        public async Task<List<CommentResponse>?> GetForPostAsync(int postId)
+        public async Task<List<CommentResponse>?> GetCommentsForPostAsync(int postId)
         {
             var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
             if (!postExists)
