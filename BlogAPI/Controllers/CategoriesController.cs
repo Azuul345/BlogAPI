@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogAPI.Controllers
 {
+    // CategoriesController exposes endpoints for reading and creating categories.
+    // Categories are stored in their own table as required by the assignment
     [ApiController]
     [Route("api/[controller]")]
     public class CategoriesController : ControllerBase
@@ -49,7 +51,7 @@ namespace BlogAPI.Controllers
                 return BadRequest("Category name is required.");
             }
 
-            // valfritt: kolla om namnet redan finns
+            // do not allow duplicate category names
             var exists = await _context.Categories
                 .AnyAsync(c => c.Name == request.Name);
 

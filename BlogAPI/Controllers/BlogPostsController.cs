@@ -9,19 +9,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogAPI.Controllers
 {
+    // PostsController is the HTTP API layer for blog posts and their comments.
+    // It delegates all business logic to IPostService and ICommentService.
     [ApiController]
     [Route("api/[controller]")]
     public class PostsController : ControllerBase
     {
         private readonly IPostService _postService;
         private readonly ICommentService _commentService;
+
+        // Services are injected via constructor injection
         public PostsController(IPostService postService, ICommentService commentService)
         {
             _postService = postService;
             _commentService = commentService;
         }
 
-
+        // GET: api/posts
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PostResponse>>> GetPosts()
         {
@@ -131,11 +135,11 @@ namespace BlogAPI.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message); // Post/User saknas eller ogiltig text
+                return BadRequest(ex.Message); // Post or user not found, or invalid text
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Forbid(ex.Message); // försöker kommentera eget inlägg
+                return Forbid(ex.Message); // Trying to comment own post
             }
         }
 

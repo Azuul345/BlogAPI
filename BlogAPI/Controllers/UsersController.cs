@@ -2,6 +2,9 @@
 using BlogAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
+
+// UsersController exposes HTTP endpoints for managing user accounts:
+// register, login, update, delete and list users.
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
